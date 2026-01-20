@@ -48,6 +48,13 @@ body {
 .version {
     color: var(--text-secondary);
     font-size: 0.875rem;
+    margin: 0;
+}
+
+.last-updated {
+    font-size: 0.8rem;
+    color: #999;
+    margin: 0;
     margin-bottom: 2rem;
 }
 
