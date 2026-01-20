@@ -35,37 +35,37 @@ void main() {
 })";
 
 void LoadSkybox() {
-    Mesh cubeMesh = GenMeshCube(1.0f, 1.0f, 1.0f);
+    // Mesh cubeMesh = GenMeshCube(1.0f, 1.0f, 1.0f);
 
-    g_skybox.model = LoadModelFromMesh(cubeMesh);
-    g_skybox.shader = LoadShaderFromMemory(SKY_VS, SKY_FS);
+    // g_skybox.model = LoadModelFromMesh(cubeMesh);
+    // g_skybox.shader = LoadShaderFromMemory(SKY_VS, SKY_FS);
 
-    u_inner = GetShaderLocation(g_skybox.shader, "innerColor");
-    u_outer = GetShaderLocation(g_skybox.shader, "outerColor");
+    // u_inner = GetShaderLocation(g_skybox.shader, "innerColor");
+    // u_outer = GetShaderLocation(g_skybox.shader, "outerColor");
 
-    g_skybox.model.materials[0].shader = g_skybox.shader;
+    // g_skybox.model.materials[0].shader = g_skybox.shader;
 }
 
 void UnloadSkybox() {
-    UnloadModel(g_skybox.model);
-    UnloadShader(g_skybox.shader);
+    // UnloadModel(g_skybox.model);
+    // UnloadShader(g_skybox.shader);
 }
 
 void DrawSkybox() {
-    float inner[3] = {0.25f, 0.55f, 0.65f};
-    float outer[3] = {0.05f, 0.15f, 0.45f};
+    // float inner[3] = {0.25f, 0.55f, 0.65f};
+    // float outer[3] = {0.05f, 0.15f, 0.45f};
 
-    rlDisableDepthTest();
-    rlDisableDepthMask();
-    rlDisableBackfaceCulling();
-    BeginShaderMode(g_skybox.shader);
+    // rlDisableDepthTest();
+    // rlDisableDepthMask();
+    // rlDisableBackfaceCulling();
+    // BeginShaderMode(g_skybox.shader);
 
-    SetShaderValue(g_skybox.shader, u_inner, inner, SHADER_UNIFORM_VEC3);
-    SetShaderValue(g_skybox.shader, u_outer, outer, SHADER_UNIFORM_VEC3);
-    DrawModel(g_skybox.model, {0, 0, 0}, 1000000.0f, WHITE);
+    // SetShaderValue(g_skybox.shader, u_inner, inner, SHADER_UNIFORM_VEC3);
+    // SetShaderValue(g_skybox.shader, u_outer, outer, SHADER_UNIFORM_VEC3);
+    // DrawModel(g_skybox.model, {0, 0, 0}, 1000000.0f, WHITE);
 
-    EndShaderMode();
-    rlEnableBackfaceCulling();
-    rlEnableDepthMask();
-    rlEnableDepthTest();
+    // EndShaderMode();
+    // rlEnableBackfaceCulling();
+    // rlEnableDepthMask();
+    // rlEnableDepthTest();
 }

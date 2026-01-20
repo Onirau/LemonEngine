@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 import re
 import json
 import sys
@@ -576,7 +577,6 @@ class CommentExtractor:
     
     def normalize_type(self, type_str: str) -> str:
         type_map = {
-            'Vector3Game': 'Vector3',
             'std::string': 'string',
             'double': 'number',
             'float': 'number',
@@ -592,12 +592,36 @@ class CommentExtractor:
 
 
 class HTMLGenerator:
-    def __init__(self, json_file: str, output_dir: str, templates_dir: str = "scripts/documentation/templates"):
+    def __init__(self, json_file: str, output_dir: str, templates_dir: str = "scripts/documentation/templates", config_file: str = "src/core/Config.h"):
         self.json_file = json_file
         self.output_dir = Path(output_dir)
         self.templates_dir = Path(templates_dir)
         self.api_data = {}
         self.class_hierarchy = {}
+        
+        # maybe in the future we add this to the api_data
+        self.config_file = Path(config_file)
+        self.engine_name = "Engine"
+        self.engine_version = "0.0.0"
+        self.current_date = datetime.now().strftime("%d/%m/%y") #not gon have for now
+        self.load_config()
+    
+    def load_config(self):
+        if self.config_file.exists():
+            text = self.config_file.read_text(encoding="utf-8")
+            name_match = re.search(r'#define\s+ENGINE_NAME\s+"([^"]+)"', text)
+            version_match = re.search(r'#define\s+ENGINE_VERSION_STRING\s+"([^"]+)"', text)
+            if name_match:
+                self.engine_name = name_match.group(1)
+            if version_match:
+                self.engine_version = version_match.group(1)
+                
+    def fill_config_info(self, html: str) -> str:
+        """Replace engine placeholders in any HTML page."""
+        html = html.replace("{{ENGINE_NAME}}", self.engine_name)
+        html = html.replace("{{ENGINE_VERSION_STRING}}", self.engine_version)
+        html = html.replace("{{CURRENT_DATE}}", self.current_date)
+        return html
     
     def generate(self):
         with open(self.json_file, 'r', encoding='utf-8') as f:
@@ -710,6 +734,7 @@ class HTMLGenerator:
         html = template.replace("{{CLASS_LIST}}", class_list)
         html = html.replace("{{ENUM_LIST}}", enum_list)
         html = html.replace("{{DATATYPE_LIST}}", datatype_list)
+        html = self.fill_config_info(html)
         
         with open(self.output_dir / "index.html", 'w', encoding='utf-8') as f:
             f.write(html)
@@ -756,7 +781,7 @@ class HTMLGenerator:
         html = html.replace("{{PROPERTIES_SECTION}}", properties_section)
         html = html.replace("{{METHODS_SECTION}}", methods_section)
         html = html.replace("{{EVENTS_SECTION}}", events_section)
-        
+        html = self.fill_config_info(html)
         with open(self.output_dir / f"{cls['Name']}.html", 'w', encoding='utf-8') as f:
             f.write(html)
 
@@ -773,6 +798,7 @@ class HTMLGenerator:
         html = html.replace("{{DESCRIPTION}}", enum.get('Description', ''))
         html = html.replace("{{ENUM_ITEMS}}", items_html)
         html = html.replace("{{ENUM_EXAMPLES}}", examples_html)
+        html = self.fill_config_info(html)
         with open(self.output_dir / f"{enum['Name']}.html", 'w', encoding='utf-8') as f:
             f.write(html)
 
@@ -786,6 +812,7 @@ class HTMLGenerator:
         html = html.replace("{{DESCRIPTION}}", dt.get('Description', ''))
         html = html.replace("{{PROPERTIES_SECTION}}", properties_section)
         html = html.replace("{{METHODS_SECTION}}", methods_section)
+        html = self.fill_config_info(html)
         with open(self.output_dir / f"{dt['Name']}.html", 'w', encoding='utf-8') as f:
             f.write(html)
     

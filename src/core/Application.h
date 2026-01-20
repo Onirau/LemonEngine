@@ -11,7 +11,6 @@
 #include "../Global.h"
 #include "PrimitiveModels.h"
 #include "SkyboxRenderer.h"
-#include "WindowManager.h"
 #include "TextRenderer.h"
 
 class Application {

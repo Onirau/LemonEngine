@@ -14,8 +14,8 @@ Part::Part() : BasePart() {
     Shape = "Block";
 }
 
-Part::Part(const std::string &name, const Vector3Game &position,
-           const Vector3Game &size, const Color3 &color, bool anchored,
+Part::Part(const std::string &name, const Vector3 &position,
+           const Vector3 &size, const Color3 &color, bool anchored,
            std::string shape)
     : BasePart() {
     Name = name;

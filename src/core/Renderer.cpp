@@ -164,7 +164,7 @@ void RenderScene(Camera3D camera, const std::vector<BasePart *> instances) {
     Lighting *lighting =
         static_cast<Lighting *>(dataModel->GetService("Lighting"));
 
-    Vector3Game sunDirGame = lighting->GetSunDirection();
+    Vector3 sunDirGame = lighting->GetSunDirection();
 
     Vector3 lightDir = {sunDirGame.x, sunDirGame.y, sunDirGame.z};
     lightDir = Vector3Normalize(Vector3Negate(lightDir));

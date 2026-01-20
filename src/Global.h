@@ -4,7 +4,7 @@
 
 #include "core/WindowManager.h"
 #include "core/LuaBindings.h"
-#include "core/Renderer.h"
+// #include "core/Renderer.h"
 #include "instances/DataModel.h"
 #include "instances/services/Lighting.h"
 #include "instances/services/Workspace.h"

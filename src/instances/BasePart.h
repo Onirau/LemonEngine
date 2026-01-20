@@ -43,7 +43,7 @@ struct BasePart : public Instance {
      * @default Vector3.new(0, 0.5, 0)
      * @description The 3D position of the part in world space
      */
-    Vector3Game Position = Vector3Game{0, 0.5, 0};
+    Vector3 Position = Vector3{0, 0.5, 0};
 
     /**
      * @property Rotation
@@ -51,7 +51,7 @@ struct BasePart : public Instance {
      * @default Vector3.new(0, 0, 0)
      * @description The rotation angles in degrees (X, Y, Z)
      */
-    Vector3Game Rotation = Vector3Game{0, 0, 0};
+    Vector3 Rotation = Vector3{0, 0, 0};
 
     /**
      * @property Size
@@ -59,7 +59,7 @@ struct BasePart : public Instance {
      * @default Vector3.new(4, 1, 2)
      * @description The dimensions of the part
      */
-    Vector3Game Size = Vector3Game{4, 1, 2};
+    Vector3 Size = Vector3{4, 1, 2};
 
     /**
      * @property Velocity
@@ -67,7 +67,7 @@ struct BasePart : public Instance {
      * @default Vector3.new(0, 0, 0)
      * @description The current velocity of the part
      */
-    Vector3Game Velocity = Vector3Game{0, 0, 0};
+    Vector3 Velocity = Vector3{0, 0, 0};
 
     /**
      * @property RotationVelocity
@@ -75,7 +75,7 @@ struct BasePart : public Instance {
      * @default Vector3.new(0, 0, 0)
      * @description The angular velocity of the part
      */
-    Vector3Game RotationVelocity = Vector3Game{0, 0, 0};
+    Vector3 RotationVelocity = Vector3{0, 0, 0};
 
     /**
      * @property Anchored

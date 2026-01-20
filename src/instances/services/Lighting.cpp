@@ -8,7 +8,7 @@
 
 Lighting::Lighting() : Instance("Lighting") { Name = "Lighting"; }
 
-Vector3Game Lighting::GetSunDirection() const {
+Vector3 Lighting::GetSunDirection() const {
     // Convert clock time (0-24) to radians
     // 0 = midnight, 6 = sunrise, 12 = noon, 18 = sunset
     float timeRadians = (ClockTime / 24.0f) * Constants::TWO_PI_F;
@@ -30,7 +30,7 @@ Vector3Game Lighting::GetSunDirection() const {
 
     // Color3 ambientColor = lighting->Ambient;
     // Normalize the vector
-    Vector3Game direction(x, y, z);
+    Vector3 direction(x, y, z);
     float length = std::sqrt(x * x + y * y + z * z);
     if (length > 0.0f) {
         direction.x /= length;
@@ -109,10 +109,10 @@ void Lighting::Bind(lua_State *L) {
         "Lighting", "GetSunDirection",
         [](lua_State *L, ::Instance *inst) -> int {
             auto *lighting = static_cast<Lighting *>(inst);
-            Vector3Game direction = lighting->GetSunDirection();
+            Vector3 direction = lighting->GetSunDirection();
 
-            Vector3Game *v =
-                (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+            Vector3 *v =
+                (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
             *v = direction;
             luaL_getmetatable(L, "Vector3Meta");
             lua_setmetatable(L, -2);

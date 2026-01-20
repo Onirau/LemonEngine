@@ -20,8 +20,8 @@ void BasePart_Bind(lua_State *L) {
         "BasePart", "Position",
         [](lua_State *L, Instance *inst) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+            Vector3 *v =
+                (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
             *v = part->Position;
             luaL_getmetatable(L, "Vector3Meta");
             lua_setmetatable(L, -2);
@@ -29,8 +29,8 @@ void BasePart_Bind(lua_State *L) {
         },
         [](lua_State *L, Instance *inst, int valueIdx) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)luaL_checkudata(L, valueIdx, "Vector3Meta");
+            Vector3 *v =
+                (Vector3 *)luaL_checkudata(L, valueIdx, "Vector3Meta");
             part->Position = *v;
             return 0;
         });
@@ -39,8 +39,8 @@ void BasePart_Bind(lua_State *L) {
         "BasePart", "Rotation",
         [](lua_State *L, Instance *inst) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+            Vector3 *v =
+                (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
             *v = part->Rotation;
             luaL_getmetatable(L, "Vector3Meta");
             lua_setmetatable(L, -2);
@@ -48,8 +48,8 @@ void BasePart_Bind(lua_State *L) {
         },
         [](lua_State *L, Instance *inst, int valueIdx) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)luaL_checkudata(L, valueIdx, "Vector3Meta");
+            Vector3 *v =
+                (Vector3 *)luaL_checkudata(L, valueIdx, "Vector3Meta");
             part->Rotation = *v;
             return 0;
         });
@@ -58,8 +58,8 @@ void BasePart_Bind(lua_State *L) {
         "BasePart", "Size",
         [](lua_State *L, Instance *inst) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+            Vector3 *v =
+                (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
             *v = part->Size;
             luaL_getmetatable(L, "Vector3Meta");
             lua_setmetatable(L, -2);
@@ -67,8 +67,8 @@ void BasePart_Bind(lua_State *L) {
         },
         [](lua_State *L, Instance *inst, int valueIdx) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)luaL_checkudata(L, valueIdx, "Vector3Meta");
+            Vector3 *v =
+                (Vector3 *)luaL_checkudata(L, valueIdx, "Vector3Meta");
             part->Size = *v;
             return 0;
         });
@@ -77,8 +77,8 @@ void BasePart_Bind(lua_State *L) {
         "BasePart", "Velocity",
         [](lua_State *L, Instance *inst) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+            Vector3 *v =
+                (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
             *v = part->Velocity;
             luaL_getmetatable(L, "Vector3Meta");
             lua_setmetatable(L, -2);
@@ -86,8 +86,8 @@ void BasePart_Bind(lua_State *L) {
         },
         [](lua_State *L, Instance *inst, int valueIdx) -> int {
             auto *part = static_cast<BasePart *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)luaL_checkudata(L, valueIdx, "Vector3Meta");
+            Vector3 *v =
+                (Vector3 *)luaL_checkudata(L, valueIdx, "Vector3Meta");
             part->Velocity = *v;
             return 0;
         });

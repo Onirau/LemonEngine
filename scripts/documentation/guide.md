@@ -2,7 +2,7 @@
 
 TODO: Add this into a CI process, to automatically generate documentation for each commit.
 
-This system extracts **API information** from **C++ comments** and generates **static HTML documentation**.
+This system extracts **API information** from **C++ comments** and generates **static HTML documentation**. 
 
 ---
 

@@ -60,7 +60,7 @@ struct Lighting : public Instance {
      * @description Returns the direction vector of the sun.
      *
      */
-    Vector3Game GetSunDirection() const;
+    Vector3 GetSunDirection() const;
 
     // Lua bindings
     static void Bind(lua_State *L);

@@ -99,7 +99,7 @@ void RegisterScriptBindings(lua_State *L, std::vector<BasePart *> &parts,
     RegisterAllEnums(L);
 
     // Register datatypes
-    Vector3Game_Bind(L);
+    Vector3_Bind(L);
     Color3_Bind(L);
     Task_Bind(L);
 

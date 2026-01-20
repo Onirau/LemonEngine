@@ -1,19 +1,19 @@
 #include "Vector3.h"
 
-const Vector3Game Vector3_zero = Vector3Game{0, 0, 0};
-const Vector3Game Vector3_one = Vector3Game{1, 1, 1};
+const Vector3 Vector3_zero = Vector3{0, 0, 0};
+const Vector3 Vector3_one = Vector3{1, 1, 1};
 
-const Vector3Game Vector3_xAxis = Vector3Game{1, 0, 0};
-const Vector3Game Vector3_yAxis = Vector3Game{0, 1, 0};
-const Vector3Game Vector3_zAxis = Vector3Game{0, 0, 1};
+const Vector3 Vector3_xAxis = Vector3{1, 0, 0};
+const Vector3 Vector3_yAxis = Vector3{0, 1, 0};
+const Vector3 Vector3_zAxis = Vector3{0, 0, 1};
 
 static int Vector3_new(lua_State *L) {
     float x = (float)luaL_optnumber(L, 1, 0);
     float y = (float)luaL_optnumber(L, 2, 0);
     float z = (float)luaL_optnumber(L, 3, 0);
 
-    Vector3Game *v = (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
-    *v = Vector3Game{x, y, z};
+    Vector3 *v = (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
+    *v = Vector3{x, y, z};
 
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -22,18 +22,18 @@ static int Vector3_new(lua_State *L) {
 }
 
 static int Vector3_tostring(lua_State *L) {
-    Vector3Game *v3 = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3 = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
     lua_pushfstring(L, "%f, %f, %f", v3->x, v3->y, v3->z);
     return 1;
 }
 
 static int Vector3_add(lua_State *L) {
-    Vector3Game *a = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
-    Vector3Game *b = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+    Vector3 *a = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *b = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
-    *result = Vector3Game{a->x + b->x, a->y + b->y, a->z + b->z};
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
+    *result = Vector3{a->x + b->x, a->y + b->y, a->z + b->z};
 
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -41,12 +41,12 @@ static int Vector3_add(lua_State *L) {
 }
 
 static int Vector3_sub(lua_State *L) {
-    Vector3Game *a = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
-    Vector3Game *b = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+    Vector3 *a = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *b = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
-    *result = Vector3Game{a->x - b->x, a->y - b->y, a->z - b->z};
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
+    *result = Vector3{a->x - b->x, a->y - b->y, a->z - b->z};
 
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -54,20 +54,20 @@ static int Vector3_sub(lua_State *L) {
 }
 
 static int Vector3_mul(lua_State *L) {
-    Vector3Game *v;
+    Vector3 *v;
     float s;
 
     if (lua_isnumber(L, 1)) {
         s = (float)luaL_checknumber(L, 1);
-        v = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+        v = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
     } else {
-        v = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+        v = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
         s = (float)luaL_checknumber(L, 2);
     }
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
-    *result = Vector3Game{v->x * s, v->y * s, v->z * s};
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
+    *result = Vector3{v->x * s, v->y * s, v->z * s};
 
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -75,7 +75,7 @@ static int Vector3_mul(lua_State *L) {
 }
 
 static int Vector3_div(lua_State *L) {
-    Vector3Game *v = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
     float s = (float)luaL_checknumber(L, 2);
 
     if (s == 0.0f) {
@@ -83,9 +83,9 @@ static int Vector3_div(lua_State *L) {
         return 0;
     }
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
-    *result = Vector3Game{v->x / s, v->y / s, v->z / s};
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
+    *result = Vector3{v->x / s, v->y / s, v->z / s};
 
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -93,11 +93,11 @@ static int Vector3_div(lua_State *L) {
 }
 
 static int Vector3_unm(lua_State *L) {
-    Vector3Game *v = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
-    *result = Vector3Game{-v->x, -v->y, -v->z};
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
+    *result = Vector3{-v->x, -v->y, -v->z};
 
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -105,7 +105,7 @@ static int Vector3_unm(lua_State *L) {
 }
 
 static int Vector3_index(lua_State *L) {
-    Vector3Game *v3 = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3 = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
     const char *key = luaL_checkstring(L, 2);
 
     if (strcmp(key, "X") == 0) {
@@ -117,8 +117,8 @@ static int Vector3_index(lua_State *L) {
     } else if (strcmp(key, "Magnitude") == 0) {
         lua_pushnumber(L, v3->magnitude());
     } else if (strcmp(key, "Unit") == 0) {
-        Vector3Game *result =
-            (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+        Vector3 *result =
+            (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
         *result = v3->unit();
         luaL_getmetatable(L, "Vector3Meta");
         lua_setmetatable(L, -2);
@@ -142,10 +142,10 @@ static int Vector3_index(lua_State *L) {
 }
 
 static int Vector3_abs(lua_State *L) {
-    Vector3Game *v3 = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3 = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
     *result = v3->abs();
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -154,10 +154,10 @@ static int Vector3_abs(lua_State *L) {
 }
 
 static int Vector3_ceil(lua_State *L) {
-    Vector3Game *v3 = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3 = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
     *result = v3->ceil();
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -166,10 +166,10 @@ static int Vector3_ceil(lua_State *L) {
 }
 
 static int Vector3_floor(lua_State *L) {
-    Vector3Game *v3 = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3 = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
     *result = v3->floor();
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -178,19 +178,19 @@ static int Vector3_floor(lua_State *L) {
 }
 
 static int Vector3_dot(lua_State *L) {
-    Vector3Game *v3a = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
-    Vector3Game *v3b = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+    Vector3 *v3a = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3b = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
 
     lua_pushnumber(L, v3a->dot(*v3b));
     return 1;
 }
 
 static int Vector3_cross(lua_State *L) {
-    Vector3Game *v3a = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
-    Vector3Game *v3b = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+    Vector3 *v3a = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3b = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
     *result = v3a->cross(*v3b);
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -199,12 +199,12 @@ static int Vector3_cross(lua_State *L) {
 }
 
 static int Vector3_lerp(lua_State *L) {
-    Vector3Game *v3a = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
-    Vector3Game *v3b = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+    Vector3 *v3a = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3b = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
     float alpha = (float)luaL_checknumber(L, 3);
 
-    Vector3Game *result =
-        (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+    Vector3 *result =
+        (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
     *result = v3a->lerp(*v3b, alpha);
     luaL_getmetatable(L, "Vector3Meta");
     lua_setmetatable(L, -2);
@@ -213,14 +213,14 @@ static int Vector3_lerp(lua_State *L) {
 }
 
 static int Vector3_fuzzyeq(lua_State *L) {
-    Vector3Game *v3a = (Vector3Game *)luaL_checkudata(L, 1, "Vector3Meta");
-    Vector3Game *v3b = (Vector3Game *)luaL_checkudata(L, 2, "Vector3Meta");
+    Vector3 *v3a = (Vector3 *)luaL_checkudata(L, 1, "Vector3Meta");
+    Vector3 *v3b = (Vector3 *)luaL_checkudata(L, 2, "Vector3Meta");
 
     lua_pushboolean(L, v3a->fuzzyequal(*v3b));
     return 1;
 }
 
-void Vector3Game_Bind(lua_State *L) {
+void Vector3_Bind(lua_State *L) {
     luaL_newmetatable(L, "Vector3Meta");
 
     lua_pushvalue(L, -1);
@@ -261,9 +261,9 @@ void Vector3Game_Bind(lua_State *L) {
 
     lua_newtable(L);
 
-    auto pushVector3Const = [L](const char *name, const Vector3Game &v) {
-        Vector3Game *ptr =
-            (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+    auto pushVector3Const = [L](const char *name, const Vector3 &v) {
+        Vector3 *ptr =
+            (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
         *ptr = v;
         luaL_getmetatable(L, "Vector3Meta");
         lua_setmetatable(L, -2);

@@ -12,7 +12,7 @@
 
 struct Attribute {
     std::string Name;
-    std::variant<bool, double, std::string, Vector3Game, Color3> Value;
+    std::variant<bool, double, std::string, Vector3, Color3> Value;
 };
 
 /**

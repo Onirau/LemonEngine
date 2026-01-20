@@ -15,8 +15,8 @@ void Workspace::Bind(lua_State *L) {
         "Workspace", "Gravity",
         [](lua_State *L, Instance *inst) -> int {
             auto *ws = static_cast<Workspace *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)lua_newuserdata(L, sizeof(Vector3Game));
+            Vector3 *v =
+                (Vector3 *)lua_newuserdata(L, sizeof(Vector3));
             *v = ws->Gravity;
             luaL_getmetatable(L, "Vector3Meta");
             lua_setmetatable(L, -2);
@@ -24,8 +24,8 @@ void Workspace::Bind(lua_State *L) {
         },
         [](lua_State *L, Instance *inst, int valueIdx) -> int {
             auto *ws = static_cast<Workspace *>(inst);
-            Vector3Game *v =
-                (Vector3Game *)luaL_checkudata(L, valueIdx, "Vector3Meta");
+            Vector3 *v =
+                (Vector3 *)luaL_checkudata(L, valueIdx, "Vector3Meta");
             ws->Gravity = *v;
             return 0;
         });

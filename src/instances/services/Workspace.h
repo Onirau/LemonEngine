@@ -26,7 +26,7 @@ struct Workspace : public Instance {
      * @default Vector3.new(0, -196.2, 0)
      * @description The acceleration due to gravity applied to all dynamic parts
      */
-    Vector3Game Gravity = Vector3Game(0, -196.2f, 0);
+    Vector3 Gravity = Vector3(0, -196.2f, 0);
 
     /**
      * @property CurrentCamera
