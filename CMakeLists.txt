@@ -18,20 +18,39 @@ endif()
 # Dependencies directory
 set(DEPS_DIR "${CMAKE_SOURCE_DIR}/dependencies")
 
-# Add luau
+# ========== GLFW ==========
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+if(EXISTS "${DEPS_DIR}/glfw/CMakeLists.txt")
+    add_subdirectory(${DEPS_DIR}/glfw)
+    set(GLFW_FOUND TRUE)
+else()
+    message(FATAL_ERROR "GLFW not found in dependencies")
+endif()
+
+# ========== GLAD ==========
+# GLAD will be added as source files directly
+set(GLAD_INCLUDE_DIR "${DEPS_DIR}/glad/include")
+set(GLAD_SOURCE "${DEPS_DIR}/glad/src/glad.c")
+
+if(NOT EXISTS ${GLAD_INCLUDE_DIR})
+    message(FATAL_ERROR "GLAD not found in dependencies/glad")
+endif()
+
+# ========== GLM ==========
+# Header-only library
+set(GLM_INCLUDE_DIR "${DEPS_DIR}/glm")
+if(NOT EXISTS ${GLM_INCLUDE_DIR})
+    message(FATAL_ERROR "GLM not found in dependencies/glm")
+endif()
+
+# ========== Luau =========
 if(EXISTS "${DEPS_DIR}/luau/CMakeLists.txt")
     add_subdirectory(${DEPS_DIR}/luau)
     set(LUAU_FOUND TRUE)
 else()
     message(FATAL_ERROR "luau not found in dependencies")
-endif()
-
-# Add raylib
-if(EXISTS "${DEPS_DIR}/raylib/CMakeLists.txt")
-    add_subdirectory(${DEPS_DIR}/raylib)
-    set(raylib_FOUND TRUE)
-else()
-    message(FATAL_ERROR "raylib not found in dependencies")
 endif()
 
 # Collect source files
@@ -48,43 +67,52 @@ foreach(source ${COMMON_SOURCES})
     message(STATUS "  ${source}")
 endforeach()
 
-# Editor executable
-file(GLOB EDITOR_SOURCES "src/editor/*.cpp")
-add_executable(LemonEngineEditor ${EDITOR_SOURCES} ${COMMON_SOURCES})
+# # Editor executable
+# file(GLOB EDITOR_SOURCES "src/editor/*.cpp")
+# add_executable(LemonEngineEditor ${EDITOR_SOURCES} ${COMMON_SOURCES})
 
-# Runtime executable
-file(GLOB RUNTIME_SOURCES "src/runtime/*.cpp")
-add_executable(LemonEngineRuntime ${RUNTIME_SOURCES} ${COMMON_SOURCES})
+# # Runtime executable
+# file(GLOB RUNTIME_SOURCES "src/runtime/*.cpp")
+# add_executable(LemonEngineRuntime ${RUNTIME_SOURCES} ${COMMON_SOURCES})
+
+add_executable(TestOpenGL "src/test_window.cpp" ${GLAD_SOURCE})
+target_include_directories(TestOpenGL PRIVATE 
+    ${GLAD_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}
+)
+target_link_libraries(TestOpenGL PRIVATE glfw opengl32)
 
 # Include directories for both executables
-foreach(TARGET LemonEngineEditor LemonEngineRuntime)
-    target_include_directories(${TARGET} PRIVATE 
-        ${DEPS_DIR}/luau/Ast/include
-        ${DEPS_DIR}/luau/Config/include
-        ${DEPS_DIR}/luau/VM/include
-        ${DEPS_DIR}/luau/Compiler/include
-        ${DEPS_DIR}/luau/Analysis/include
-        ${CMAKE_SOURCE_DIR}
-    )
+# foreach(TARGET LemonEngineEditor LemonEngineRuntime)
+#     target_include_directories(${TARGET} PRIVATE 
+#         ${DEPS_DIR}/luau/Ast/include
+#         ${DEPS_DIR}/luau/Config/include
+#         ${DEPS_DIR}/luau/VM/include
+#         ${DEPS_DIR}/luau/Compiler/include
+#         ${DEPS_DIR}/luau/Analysis/include
+#         ${GLAD_INCLUDE_DIR}
+#         ${GLM_INCLUDE_DIR}
+#         ${CMAKE_SOURCE_DIR}
+#     )
 
-    # Link libraries
-    target_link_libraries(${TARGET} PRIVATE raylib Luau.VM Luau.Ast Luau.Compiler)
+#     # Link libraries
+#     target_link_libraries(${TARGET} PRIVATE glfw opengl32 Luau.VM Luau.Ast Luau.Compiler)
 
-    # Platform-specific libraries
-    if(WIN32)
-        target_link_libraries(${TARGET} PRIVATE
-            winmm
-            gdi32
-            opengl32
-        )
-    else()
-        target_link_libraries(${TARGET} PRIVATE
-            m
-            dl
-            pthread
-            GL
-            rt
-            X11
-        )
-    endif()
-endforeach()
+#     # Platform-specific libraries
+#     if(WIN32)
+#         target_link_libraries(${TARGET} PRIVATE
+#             winmm
+#             gdi32
+#             opengl32
+#         )
+#     else()
+#         target_link_libraries(${TARGET} PRIVATE
+#             m
+#             dl
+#             pthread
+#             GL
+#             rt
+#             X11
+#         )
+#     endif()
+# endforeach()

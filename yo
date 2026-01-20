@@ -1,0 +1,9 @@
+& "C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Auxiliary\Build\vcvars64.bat"
+
+mkdir build
+
+cd build
+
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+ninja -j 12
