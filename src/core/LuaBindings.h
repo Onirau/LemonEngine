@@ -20,9 +20,6 @@
 #include "../Global.h"
 #include "Signal.h"
 
-#include "raylib.h"
-#include "raymath.h"
-
 namespace LuaBindings {
 extern std::vector<BasePart *> *g_instances;
 extern Camera3D *gg_camera;

@@ -8,9 +8,6 @@
 #include <luacode.h>
 #include <lualib.h>
 
-#include "raylib.h"
-#include "raymath.h"
-
 #include "../Global.h"
 #include "PrimitiveModels.h"
 #include "SkyboxRenderer.h"

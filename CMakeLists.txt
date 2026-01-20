@@ -67,52 +67,53 @@ foreach(source ${COMMON_SOURCES})
     message(STATUS "  ${source}")
 endforeach()
 
-# # Editor executable
-# file(GLOB EDITOR_SOURCES "src/editor/*.cpp")
-# add_executable(LemonEngineEditor ${EDITOR_SOURCES} ${COMMON_SOURCES})
+# Editor executable
+file(GLOB EDITOR_SOURCES "src/editor/*.cpp")
+add_executable(LemonEngineEditor ${EDITOR_SOURCES} ${COMMON_SOURCES})
 
-# # Runtime executable
-# file(GLOB RUNTIME_SOURCES "src/runtime/*.cpp")
-# add_executable(LemonEngineRuntime ${RUNTIME_SOURCES} ${COMMON_SOURCES})
+# Runtime executable
+file(GLOB RUNTIME_SOURCES "src/runtime/*.cpp")
+add_executable(LemonEngineRuntime ${RUNTIME_SOURCES} ${COMMON_SOURCES})
 
-add_executable(TestOpenGL "src/test_window.cpp" ${GLAD_SOURCE})
-target_include_directories(TestOpenGL PRIVATE 
-    ${GLAD_INCLUDE_DIR}
-    ${GLM_INCLUDE_DIR}
-)
-target_link_libraries(TestOpenGL PRIVATE glfw opengl32)
+# # testing opengl opens
+# add_executable(TestOpenGL "src/test_window.cpp" ${GLAD_SOURCE})
+# target_include_directories(TestOpenGL PRIVATE 
+#     ${GLAD_INCLUDE_DIR}
+#     ${GLM_INCLUDE_DIR}
+# )
+# target_link_libraries(TestOpenGL PRIVATE glfw opengl32)
 
 # Include directories for both executables
-# foreach(TARGET LemonEngineEditor LemonEngineRuntime)
-#     target_include_directories(${TARGET} PRIVATE 
-#         ${DEPS_DIR}/luau/Ast/include
-#         ${DEPS_DIR}/luau/Config/include
-#         ${DEPS_DIR}/luau/VM/include
-#         ${DEPS_DIR}/luau/Compiler/include
-#         ${DEPS_DIR}/luau/Analysis/include
-#         ${GLAD_INCLUDE_DIR}
-#         ${GLM_INCLUDE_DIR}
-#         ${CMAKE_SOURCE_DIR}
-#     )
+foreach(TARGET LemonEngineEditor LemonEngineRuntime)
+    target_include_directories(${TARGET} PRIVATE 
+        ${DEPS_DIR}/luau/Ast/include
+        ${DEPS_DIR}/luau/Config/include
+        ${DEPS_DIR}/luau/VM/include
+        ${DEPS_DIR}/luau/Compiler/include
+        ${DEPS_DIR}/luau/Analysis/include
+        ${GLAD_INCLUDE_DIR}
+        ${GLM_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}
+    )
 
-#     # Link libraries
-#     target_link_libraries(${TARGET} PRIVATE glfw opengl32 Luau.VM Luau.Ast Luau.Compiler)
+    # Link libraries
+    target_link_libraries(${TARGET} PRIVATE glfw opengl32 Luau.VM Luau.Ast Luau.Compiler)
 
-#     # Platform-specific libraries
-#     if(WIN32)
-#         target_link_libraries(${TARGET} PRIVATE
-#             winmm
-#             gdi32
-#             opengl32
-#         )
-#     else()
-#         target_link_libraries(${TARGET} PRIVATE
-#             m
-#             dl
-#             pthread
-#             GL
-#             rt
-#             X11
-#         )
-#     endif()
-# endforeach()
+    # Platform-specific libraries
+    if(WIN32)
+        target_link_libraries(${TARGET} PRIVATE
+            winmm
+            gdi32
+            opengl32
+        )
+    else()
+        target_link_libraries(${TARGET} PRIVATE
+            m
+            dl
+            pthread
+            GL
+            rt
+            X11
+        )
+    endif()
+endforeach()

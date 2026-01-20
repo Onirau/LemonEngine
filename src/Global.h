@@ -1,6 +1,5 @@
 #pragma once
 
-#include "raylib.h"
 #include <vector>
 
 #include "core/LuaBindings.h"

@@ -1,9 +1,6 @@
 #pragma once
 #include <vector>
 
-#include "raylib.h"
-#include "rlgl.h"
-
 #include "../instances/BasePart.h"
 
 extern Texture2D g_defaultTexture;
