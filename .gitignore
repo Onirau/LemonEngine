@@ -5,6 +5,10 @@ compile_commands.json
 
 # Dependencies
 dependencies/*
+!dependencies/headers
+!dependencies/glad
+!dependencies/glfw
+!dependencies/glm
 !dependencies/.gitkeep
 
 dependencies/luau/*
@@ -14,6 +18,7 @@ dependencies/luau/*
 .cache
 
 # Locally Generated Documentation
+yo
 todo
 scripts/documentation/api-dump.json
 docs/*

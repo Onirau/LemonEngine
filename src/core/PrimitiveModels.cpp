@@ -1,264 +1,337 @@
 #include "PrimitiveModels.h"
+#include <unordered_map>
 
-extern Texture2D g_defaultTexture;
+extern Engine::Graphics::Texture2D g_defaultTexture;
 
-static std::unordered_map<PartType, Model> g_models;
+static std::unordered_map<PartType, Engine::Graphics::Model> g_models;
 
-void SetMeshTextureCoords(Mesh *mesh, const Vector2 *texcoords) {
-    if (!mesh || !texcoords)
-        return;
+using namespace Engine::Graphics;
 
-    if (!mesh->texcoords)
-        mesh->texcoords =
-            (float *)RL_CALLOC(mesh->vertexCount * 2, sizeof(float));
-
-    for (unsigned int i = 0; i < mesh->vertexCount; i++) {
-        mesh->texcoords[i * 2 + 0] = texcoords[i].x;
-        mesh->texcoords[i * 2 + 1] = texcoords[i].y;
-    }
+static void CalculateFaceNormal(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, glm::vec3& normal)
+{
+    glm::vec3 edge1 = v2 - v1;
+    glm::vec3 edge2 = v3 - v1;
+    normal = glm::normalize(glm::cross(edge1, edge2));
 }
 
-static void CalculateFaceNormal(Vector3 v1, Vector3 v2, Vector3 v3,
-                                Vector3 *normal) {
-    Vector3 edge1 = Vector3Subtract(v2, v1);
-    Vector3 edge2 = Vector3Subtract(v3, v1);
-    *normal = Vector3Normalize(Vector3CrossProduct(edge1, edge2));
-}
+static Mesh GenMeshCube(float width, float height, float depth)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 
-static Mesh GenMeshWedge() {
-    Mesh mesh = {0};
+    float w = width * 0.5f;
+    float h = height * 0.5f;
+    float d = depth * 0.5f;
 
-    // Each face needs its own vertices for proper per-face normals
-    Vector3 vertices[] = {// Bottom face (2 triangles = 6 vertices)
-                          {-0.5, -0.5, -0.5},
-                          {0.5, -0.5, -0.5},
-                          {-0.5, -0.5, 0.5},
-                          {0.5, -0.5, -0.5},
-                          {0.5, -0.5, 0.5},
-                          {-0.5, -0.5, 0.5},
+    // 8 corners of cube
+    glm::vec3 cubeVerts[] = {
+        {-w,-h,-d}, {w,-h,-d}, {w,h,-d}, {-w,h,-d},   // back face
+        {-w,-h,d},  {w,-h,d},  {w,h,d},  {-w,h,d}     // front face
+    };
 
-                          // Back face (2 triangles = 6 vertices)
-                          {-0.5, -0.5, -0.5},
-                          {-0.5, 0.5, -0.5},
-                          {0.5, 0.5, -0.5},
-                          {0.5, -0.5, -0.5},
-                          {-0.5, -0.5, -0.5},
-                          {0.5, 0.5, -0.5},
+    glm::vec2 uvs[] = {
+        {0,0},{1,0},{1,1},{0,1}
+    };
 
-                          // Left triangle (3 vertices)
-                          {-0.5, -0.5, -0.5},
-                          {-0.5, -0.5, 0.5},
-                          {-0.5, 0.5, -0.5},
+    // Define 12 triangles (2 per face)
+    int faceIndices[][6] = {
+        {0,1,2,2,3,0}, // back
+        {4,5,6,6,7,4}, // front
+        {0,4,7,7,3,0}, // left
+        {1,5,6,6,2,1}, // right
+        {3,2,6,6,7,3}, // top
+        {0,1,5,5,4,0}  // bottom
+    };
 
-                          // Right triangle (3 vertices)
-                          {0.5, -0.5, -0.5},
-                          {0.5, 0.5, -0.5},
-                          {0.5, -0.5, 0.5},
+    for (auto &face : faceIndices)
+    {
+        glm::vec3 normal = glm::normalize(glm::cross(
+            cubeVerts[face[1]] - cubeVerts[face[0]],
+            cubeVerts[face[2]] - cubeVerts[face[0]]
+        ));
 
-                          // Top face (2 triangles = 6 vertices)
-                          {-0.5, 0.5, -0.5},
-                          {-0.5, -0.5, 0.5},
-                          {0.5, 0.5, -0.5},
-                          {0.5, 0.5, -0.5},
-                          {-0.5, -0.5, 0.5},
-                          {0.5, -0.5, 0.5}};
-
-    Vector2 uv[] = {// Bottom
-                    {0, 0},
-                    {1, 0},
-                    {0, 1},
-                    {1, 0},
-                    {1, 1},
-                    {0, 1},
-                    // Back
-                    {0, 0},
-                    {0, 1},
-                    {1, 1},
-                    {1, 0},
-                    {0, 0},
-                    {1, 1},
-                    // Left
-                    {0, 0},
-                    {1, 0},
-                    {0, 1},
-                    // Right
-                    {0, 0},
-                    {1, 0},
-                    {0, 1},
-                    // Top
-                    {0, 0},
-                    {0, 1},
-                    {1, 0},
-                    {1, 0},
-                    {0, 1},
-                    {1, 1}};
-
-    mesh.vertexCount = 24;
-    mesh.triangleCount = 8;
-
-    mesh.vertices = (float *)RL_MALLOC(mesh.vertexCount * 3 * sizeof(float));
-    mesh.normals = (float *)RL_MALLOC(mesh.vertexCount * 3 * sizeof(float));
-
-    // Copy vertices and calculate normals
-    for (int i = 0; i < mesh.triangleCount; i++) {
-        int baseIdx = i * 3;
-        Vector3 v1 = vertices[baseIdx];
-        Vector3 v2 = vertices[baseIdx + 1];
-        Vector3 v3 = vertices[baseIdx + 2];
-
-        Vector3 normal;
-        CalculateFaceNormal(v1, v2, v3, &normal);
-
-        for (int j = 0; j < 3; j++) {
-            int vertIdx = baseIdx + j;
-            mesh.vertices[vertIdx * 3 + 0] = vertices[vertIdx].x;
-            mesh.vertices[vertIdx * 3 + 1] = vertices[vertIdx].y;
-            mesh.vertices[vertIdx * 3 + 2] = vertices[vertIdx].z;
-
-            mesh.normals[vertIdx * 3 + 0] = normal.x;
-            mesh.normals[vertIdx * 3 + 1] = normal.y;
-            mesh.normals[vertIdx * 3 + 2] = normal.z;
+        for (int i = 0; i < 6; ++i)
+        {
+            Vertex v;
+            v.Position = cubeVerts[face[i]];
+            v.Normal = normal;
+            v.TexCoords = uvs[i%4];
+            vertices.push_back(v);
+            indices.push_back(static_cast<unsigned int>(vertices.size()-1));
         }
     }
 
-    SetMeshTextureCoords(&mesh, uv);
+    std::vector<Texture> textures;
+    textures.push_back({ &g_defaultTexture, "diffuse" });
 
-    mesh.indices = (unsigned short *)RL_MALLOC(mesh.triangleCount * 3 *
-                                               sizeof(unsigned short));
-    for (int i = 0; i < mesh.triangleCount * 3; i++) {
-        mesh.indices[i] = i;
-    }
-
-    UploadMesh(&mesh, false);
-    return mesh;
+    return Mesh(vertices, indices, textures);
 }
 
-static Mesh GenMeshCornerWedge() {
-    Mesh mesh = {0};
+static Mesh GenMeshCylinder(float radius, float height, int slices)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
 
-    Vector3 vertices[] = {// Bottom face (2 triangles = 6 vertices)
-                          {-0.5, -0.5, -0.5},
-                          {0.5, -0.5, -0.5},
-                          {-0.5, -0.5, 0.5},
-                          {0.5, -0.5, -0.5},
-                          {0.5, -0.5, 0.5},
-                          {-0.5, -0.5, 0.5},
+    float halfHeight = height * 0.5f;
+    glm::vec2 uv = {0,0};
 
-                          // Right triangle (3 vertices)
-                          {-0.5, -0.5, -0.5},
-                          {-0.5, -0.5, 0.5},
-                          {-0.5, 0.5, 0.5},
+    // Side surface
+    for (int i = 0; i < slices; ++i)
+    {
+        float theta0 = (float)i / slices * 2.0f * Constants::PI_F;
+        float theta1 = (float)(i+1) / slices * 2.0f * Constants::PI_F;
 
-                          // Front triangle (3 vertices)
-                          {-0.5, 0.5, 0.5},
-                          {-0.5, -0.5, 0.5},
-                          {0.5, -0.5, 0.5},
+        glm::vec3 p0(radius * cos(theta0), -halfHeight, radius * sin(theta0));
+        glm::vec3 p1(radius * cos(theta1), -halfHeight, radius * sin(theta1));
+        glm::vec3 p2(radius * cos(theta1), halfHeight, radius * sin(theta1));
+        glm::vec3 p3(radius * cos(theta0), halfHeight, radius * sin(theta0));
 
-                          // Back triangle (3 vertices)
-                          {0.5, -0.5, -0.5},
-                          {-0.5, -0.5, -0.5},
-                          {-0.5, 0.5, 0.5},
+        glm::vec3 normal0 = glm::normalize(glm::vec3(p0.x,0,p0.z));
+        glm::vec3 normal1 = glm::normalize(glm::vec3(p1.x,0,p1.z));
 
-                          // Left triangle (3 vertices)
-                          {0.5, -0.5, -0.5},
-                          {-0.5, 0.5, 0.5},
-                          {0.5, -0.5, 0.5}};
+        // Two triangles per quad
+        vertices.push_back({p0, normal0, {0,0}});
+        vertices.push_back({p1, normal1, {1,0}});
+        vertices.push_back({p2, normal1, {1,1}});
 
-    Vector2 uv[] = {// Bottom
-                    {0, 0},
-                    {1, 0},
-                    {0, 1},
-                    {1, 0},
-                    {1, 1},
-                    {0, 1},
-                    // Right
-                    {0, 0},
-                    {1, 0},
-                    {0, 1},
-                    // Front
-                    {0, 0},
-                    {0, 1},
-                    {1, 1},
-                    // Back
-                    {0, 0},
-                    {1, 0},
-                    {0.5, 1},
-                    // Left
-                    {1, 0},
-                    {0, 1},
-                    {1, 1}};
+        vertices.push_back({p2, normal1, {1,1}});
+        vertices.push_back({p3, normal0, {0,1}});
+        vertices.push_back({p0, normal0, {0,0}});
 
-    mesh.vertexCount = 18;
-    mesh.triangleCount = 6;
+        for(int j=0;j<6;j++)
+            indices.push_back(static_cast<unsigned int>(vertices.size()-6+j));
+    }
 
-    mesh.vertices = (float *)RL_MALLOC(mesh.vertexCount * 3 * sizeof(float));
-    mesh.normals = (float *)RL_MALLOC(mesh.vertexCount * 3 * sizeof(float));
+    // Top & bottom caps
+    glm::vec3 topCenter(0, halfHeight, 0);
+    glm::vec3 bottomCenter(0, -halfHeight, 0);
 
-    // Copy vertices and calculate normals
-    for (int i = 0; i < mesh.triangleCount; i++) {
-        int baseIdx = i * 3;
-        Vector3 v1 = vertices[baseIdx];
-        Vector3 v2 = vertices[baseIdx + 1];
-        Vector3 v3 = vertices[baseIdx + 2];
+    for (int i = 0; i < slices; ++i)
+    {
+        float theta0 = (float)i / slices * 2.0f * Constants::PI_F;
+        float theta1 = (float)(i+1) / slices * 2.0f * Constants::PI_F;
 
-        Vector3 normal;
-        CalculateFaceNormal(v1, v2, v3, &normal);
+        glm::vec3 p0(radius * cos(theta0), halfHeight, radius * sin(theta0));
+        glm::vec3 p1(radius * cos(theta1), halfHeight, radius * sin(theta1));
+        glm::vec3 p2(radius * cos(theta0), -halfHeight, radius * sin(theta0));
+        glm::vec3 p3(radius * cos(theta1), -halfHeight, radius * sin(theta1));
 
-        for (int j = 0; j < 3; j++) {
-            int vertIdx = baseIdx + j;
-            mesh.vertices[vertIdx * 3 + 0] = vertices[vertIdx].x;
-            mesh.vertices[vertIdx * 3 + 1] = vertices[vertIdx].y;
-            mesh.vertices[vertIdx * 3 + 2] = vertices[vertIdx].z;
+        glm::vec3 topNormal(0,1,0);
+        glm::vec3 bottomNormal(0,-1,0);
 
-            mesh.normals[vertIdx * 3 + 0] = normal.x;
-            mesh.normals[vertIdx * 3 + 1] = normal.y;
-            mesh.normals[vertIdx * 3 + 2] = normal.z;
+        // Top cap
+        vertices.push_back({topCenter, topNormal, {0.5f,0.5f}});
+        vertices.push_back({p0, topNormal, {0,0}});
+        vertices.push_back({p1, topNormal, {1,0}});
+        indices.push_back(static_cast<unsigned int>(vertices.size()-3));
+        indices.push_back(static_cast<unsigned int>(vertices.size()-2));
+        indices.push_back(static_cast<unsigned int>(vertices.size()-1));
+
+        // Bottom cap
+        vertices.push_back({bottomCenter, bottomNormal, {0.5f,0.5f}});
+        vertices.push_back({p3, bottomNormal, {1,0}});
+        vertices.push_back({p2, bottomNormal, {0,0}});
+        indices.push_back(static_cast<unsigned int>(vertices.size()-3));
+        indices.push_back(static_cast<unsigned int>(vertices.size()-2));
+        indices.push_back(static_cast<unsigned int>(vertices.size()-1));
+    }
+
+    std::vector<Texture> textures;
+    textures.push_back({ &g_defaultTexture, "diffuse" });
+
+    return Mesh(vertices, indices, textures);
+}
+
+static Mesh GenMeshSphere(float radius, int slices, int stacks)
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    for(int i=0;i<=stacks;i++)
+    {
+        float phi = i * Constants::PI_F / stacks;
+        for(int j=0;j<=slices;j++)
+        {
+            float theta = j * 2.0f * Constants::PI_F / slices;
+
+            glm::vec3 pos(
+                radius * sin(phi)*cos(theta),
+                radius * cos(phi),
+                radius * sin(phi)*sin(theta)
+            );
+
+            glm::vec3 normal = glm::normalize(pos);
+            glm::vec2 uv(theta/(2*Constants::PI_F), phi/Constants::PI_F);
+
+            vertices.push_back({pos, normal, uv});
         }
     }
 
-    SetMeshTextureCoords(&mesh, uv);
+    for(int i=0;i<stacks;i++)
+    {
+        for(int j=0;j<slices;j++)
+        {
+            unsigned int first = i*(slices+1) + j;
+            unsigned int second = first + slices +1;
 
-    mesh.indices = (unsigned short *)RL_MALLOC(mesh.triangleCount * 3 *
-                                               sizeof(unsigned short));
-    for (int i = 0; i < mesh.triangleCount * 3; i++) {
-        mesh.indices[i] = i;
+            indices.push_back(first);
+            indices.push_back(second);
+            indices.push_back(first+1);
+
+            indices.push_back(second);
+            indices.push_back(second+1);
+            indices.push_back(first+1);
+        }
     }
 
-    UploadMesh(&mesh, false);
-    return mesh;
+    std::vector<Texture> textures;
+    textures.push_back({ &g_defaultTexture, "diffuse" });
+
+    return Mesh(vertices, indices, textures);
 }
 
-void PreparePrimitiveModels() {
-    Model block = LoadModelFromMesh(GenMeshCube(1.f, 1.f, 1.f));
-    Model cylinder = LoadModelFromMesh(GenMeshCylinder(0.5f, 1.f, 16));
-    Model ball = LoadModelFromMesh(GenMeshSphere(0.5, 16, 16));
+
+static Mesh GenMeshWedge()
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    // Bottom face (2 triangles)
+    glm::vec3 verts[] = {
+        {-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f},
+        {0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, 0.5f},
+        // Back face
+        {-0.5f, -0.5f, -0.5f}, {-0.5f, 0.5f, -0.5f}, {0.5f, 0.5f, -0.5f},
+        {0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, -0.5f}, {0.5f, 0.5f, -0.5f},
+        // Left triangle
+        {-0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f}, {-0.5f, 0.5f, -0.5f},
+        // Right triangle
+        {0.5f, -0.5f, -0.5f}, {0.5f, 0.5f, -0.5f}, {0.5f, -0.5f, 0.5f},
+        // Top face
+        {-0.5f, 0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f}, {0.5f, 0.5f, -0.5f},
+        {0.5f, 0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f}, {0.5f, -0.5f, 0.5f}
+    };
+
+    glm::vec2 uvs[] = {
+        {0,0},{1,0},{0,1},{1,0},{1,1},{0,1},
+        {0,0},{0,1},{1,1},{1,0},{0,0},{1,1},
+        {0,0},{1,0},{0,1},
+        {0,0},{1,0},{0,1},
+        {0,0},{0,1},{1,0},{1,0},{0,1},{1,1}
+    };
+
+    // Generate vertices with normals
+    for (size_t i = 0; i < sizeof(verts)/sizeof(verts[0]); i += 3)
+    {
+        glm::vec3 normal;
+        CalculateFaceNormal(verts[i], verts[i+1], verts[i+2], normal);
+
+        for (int j = 0; j < 3; ++j)
+        {
+            Vertex v;
+            v.Position = verts[i+j];
+            v.Normal = normal;
+            v.TexCoords = uvs[i+j];
+            vertices.push_back(v);
+            indices.push_back(static_cast<unsigned int>(vertices.size()-1));
+        }
+    }
+
+    std::vector<Texture> textures;
+    textures.push_back({ &g_defaultTexture, "diffuse" });
+
+    return Mesh(vertices, indices, textures);
+}
+
+static Mesh GenMeshCornerWedge()
+{
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    // Vertex positions
+    glm::vec3 verts[] = {
+        // Bottom face (2 triangles)
+        {-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f},
+        {0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, 0.5f}, {-0.5f, -0.5f, 0.5f},
+
+        // Right triangle
+        {-0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, 0.5f}, {-0.5f, 0.5f, 0.5f},
+
+        // Front triangle
+        {-0.5f, 0.5f, 0.5f}, {-0.5f, -0.5f, 0.5f}, {0.5f, -0.5f, 0.5f},
+
+        // Back triangle
+        {0.5f, -0.5f, -0.5f}, {-0.5f, -0.5f, -0.5f}, {-0.5f, 0.5f, 0.5f},
+
+        // Left triangle
+        {0.5f, -0.5f, -0.5f}, {-0.5f, 0.5f, 0.5f}, {0.5f, -0.5f, 0.5f}
+    };
+
+    // Texture coordinates
+    glm::vec2 uvs[] = {
+        {0,0},{1,0},{0,1},{1,0},{1,1},{0,1},    // Bottom
+        {0,0},{1,0},{0,1},                        // Right
+        {0,0},{0,1},{1,1},                        // Front
+        {0,0},{1,0},{0.5,1},                      // Back
+        {1,0},{0,1},{1,1}                         // Left
+    };
+
+    // Generate vertices with normals
+    for (size_t i = 0; i < sizeof(verts)/sizeof(verts[0]); i += 3)
+    {
+        glm::vec3 normal;
+        CalculateFaceNormal(verts[i], verts[i+1], verts[i+2], normal);
+
+        for (int j = 0; j < 3; ++j)
+        {
+            Vertex v;
+            v.Position = verts[i+j];
+            v.Normal = normal;
+            v.TexCoords = uvs[i+j];
+            vertices.push_back(v);
+            indices.push_back(static_cast<unsigned int>(vertices.size()-1));
+        }
+    }
+
+    // Assign default diffuse texture
+    std::vector<Texture> textures;
+    textures.push_back({ &g_defaultTexture, "diffuse" });
+
+    return Mesh(vertices, indices, textures);
+}
+
+Model LoadModelFromMesh(const Mesh& mesh)
+{
+    Model model; // works now
+    model.GetMeshes().push_back(mesh);
+
+    return model;
+}
+
+void PreparePrimitiveModels()
+{
+    Model block = LoadModelFromMesh(GenMeshCube(1.f,1.f,1.f));
+    Model cylinder = LoadModelFromMesh(GenMeshCylinder(0.5f,1.f,16));
+    Model ball = LoadModelFromMesh(GenMeshSphere(0.5f,16,16));
     Model wedge = LoadModelFromMesh(GenMeshWedge());
-    Model cornerWedge = LoadModelFromMesh(GenMeshCornerWedge());
-
-    block.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = g_defaultTexture;
-    cylinder.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = g_defaultTexture;
-    ball.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = g_defaultTexture;
-    wedge.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = g_defaultTexture;
-    cornerWedge.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture =
-        g_defaultTexture;
+    // Model cornerWedge = LoadModelFromMesh(GenMeshCornerWedge());
 
     g_models[PartType::Block] = block;
     g_models[PartType::Cylinder] = cylinder;
     g_models[PartType::Ball] = ball;
     g_models[PartType::Wedge] = wedge;
-    g_models[PartType::CornerWedge] = cornerWedge;
+    // g_models[PartType::CornerWedge] = cornerWedge;
 }
 
-void UnloadPrimitiveModels() {
-    for (auto &[_, model] : g_models)
-        UnloadModel(model);
-    g_models.clear();
-}
-
-Model *GetPrimitiveModel(PartType shape) {
+Model* GetPrimitiveModel(PartType shape)
+{
     auto it = g_models.find(shape);
     if (it != g_models.end())
         return &it->second;
-
     return nullptr;
+}
+
+void UnloadPrimitiveModels()
+{
+    g_models.clear();
 }

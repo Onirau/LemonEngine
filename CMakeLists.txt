@@ -62,6 +62,8 @@ file(GLOB_RECURSE COMMON_SOURCES
     "src/Global.cpp"
 )
 
+list(APPEND COMMON_SOURCES "src/stb_image_impl.cpp")
+
 message(STATUS "Found source files:")
 foreach(source ${COMMON_SOURCES})
     message(STATUS "  ${source}")
@@ -86,6 +88,7 @@ add_executable(LemonEngineRuntime ${RUNTIME_SOURCES} ${COMMON_SOURCES})
 # Include directories for both executables
 foreach(TARGET LemonEngineEditor LemonEngineRuntime)
     target_include_directories(${TARGET} PRIVATE 
+        ${DEPS_DIR}/headers
         ${DEPS_DIR}/luau/Ast/include
         ${DEPS_DIR}/luau/Config/include
         ${DEPS_DIR}/luau/VM/include
