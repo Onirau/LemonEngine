@@ -1,6 +1,4 @@
 #include "PrimitiveModels.h"
-#include <raylib.h>
-#include <raymath.h>
 
 extern Texture2D g_defaultTexture;
 

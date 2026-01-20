@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "core/WindowManager.h"
 #include "core/LuaBindings.h"
 #include "core/Renderer.h"
 #include "instances/DataModel.h"

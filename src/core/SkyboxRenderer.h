@@ -1,8 +1,5 @@
 #pragma once
 
-#include "raylib.h"
-#include "rlgl.h"
-
 struct Skybox {
     Model model{};
     Shader shader{};

@@ -1,12 +1,18 @@
 #pragma once
-#include "raylib.h"
+
 #include <cmath>
 #include <cstring>
 #include <ostream>
-
 #include <lua.h>
 #include <luacode.h>
 #include <lualib.h>
+
+// temporary vector2
+struct Vector2 {
+    float x, y;
+    Vector2() : x(0), y(0) {}
+    Vector2(float x, float y) : x(x), y(y) {}
+};
 
 /**
  * @class Vector3
@@ -33,7 +39,7 @@
  * local midpoint = pos:Lerp(Vector3.zero, 0.5)
  * ```
  */
-struct Vector3Game {
+struct Vector3 {
     /**
      * @property X
      * @type number
@@ -55,29 +61,26 @@ struct Vector3Game {
      */
     float z;
 
-    Vector3Game() {
+    Vector3() {
         x = 0;
         y = 0;
         z = 0;
     }
-    Vector3Game(float X, float Y, float Z) {
+    Vector3(float X, float Y, float Z) {
         x = X;
         y = Y;
         z = Z;
     }
 
-    ::Vector3 toRaylib() { return {x, y, z}; }
-    Vector3Game fromRaylib(Vector3 v3) { return {v3.x, v3.y, v3.z}; }
-
-    Vector3Game operator+(const Vector3Game &v) const {
+    Vector3 operator+(const Vector3 &v) const {
         return {x + v.x, y + v.y, z + v.z};
     }
-    Vector3Game operator-(const Vector3Game &v) const {
+    Vector3 operator-(const Vector3 &v) const {
         return {x - v.x, y - v.y, z - v.z};
     }
-    Vector3Game operator-() const { return {-x, -y, -z}; }
-    Vector3Game operator*(float s) const { return {x * s, y * s, z * s}; }
-    Vector3Game operator/(float s) const { return {x / s, y / s, z / s}; }
+    Vector3 operator-() const { return {-x, -y, -z}; }
+    Vector3 operator*(float s) const { return {x * s, y * s, z * s}; }
+    Vector3 operator/(float s) const { return {x / s, y / s, z / s}; }
 
     /**
      * @property Magnitude
@@ -104,7 +107,7 @@ struct Vector3Game {
      * print(unit.Magnitude) -- 1
      * ```
      */
-    Vector3Game unit() {
+    Vector3 unit() {
         float mag = magnitude();
         if (mag > 0.00001f)
             return *this / mag;
@@ -121,7 +124,7 @@ struct Vector3Game {
      * local abs = vec:Abs() -- Vector3(5, 10, 3)
      * ```
      */
-    Vector3Game abs() const { return {fabsf(x), fabsf(y), fabsf(z)}; }
+    Vector3 abs() const { return {fabsf(x), fabsf(y), fabsf(z)}; }
 
     /**
      * @method Ceil
@@ -134,7 +137,7 @@ struct Vector3Game {
      * local ceiled = vec:Ceil() -- Vector3(2, 3, 4)
      * ```
      */
-    Vector3Game ceil() const {
+    Vector3 ceil() const {
         return {float(int(x + 1)), float(int(y + 1)), float(int(z + 1))};
     }
 
@@ -149,7 +152,7 @@ struct Vector3Game {
      * local floored = vec:Floor() -- Vector3(1, 2, 3)
      * ```
      */
-    Vector3Game floor() const {
+    Vector3 floor() const {
         return {float(int(x)), float(int(y)), float(int(z))};
     }
 
@@ -165,7 +168,7 @@ struct Vector3Game {
      * print(a:Dot(b)) -- 0 (perpendicular)
      * ```
      */
-    float dot(const Vector3Game &v) const {
+    float dot(const Vector3 &v) const {
         return x * v.x + y * v.y + z * v.z;
     }
 
@@ -181,7 +184,7 @@ struct Vector3Game {
      * local cross = a:Cross(b) -- Returns Vector3.zAxis
      * ```
      */
-    Vector3Game cross(const Vector3Game &v) const {
+    Vector3 cross(const Vector3 &v) const {
         return {y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x};
     }
 
@@ -199,7 +202,7 @@ struct Vector3Game {
      * local mid = start:Lerp(finish, 0.5) -- Vector3(5, 5, 5)
      * ```
      */
-    Vector3Game lerp(const Vector3Game &goal, float alpha) const {
+    Vector3 lerp(const Vector3 &goal, float alpha) const {
         return *this + (goal - *this) * alpha;
     }
 
@@ -216,9 +219,9 @@ struct Vector3Game {
      * print(a:FuzzyEq(b)) -- true
      * ```
      */
-    bool fuzzyequal(const Vector3Game &v, float epsilon = 1e-5) const {
+    bool fuzzyequal(const Vector3 &v, float epsilon = 1e-5) const {
         return fabsf(magnitude()) - fabsf(v.magnitude()) < epsilon;
     }
 };
 
-void Vector3Game_Bind(lua_State *L);
+void Vector3_Bind(lua_State *L);

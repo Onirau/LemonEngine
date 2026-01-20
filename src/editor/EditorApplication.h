@@ -1,6 +1,8 @@
 #pragma once
 #include "../core/Application.h"
 #include "../core/Config.h"
+#include "../core/WindowManager.h"
+#include "../core/TextRenderer.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -106,18 +108,19 @@ private:
 
 protected:
     void RenderUI() override {
-        DrawText("WASD to move camera, Right Click to look around", 10, 10, 20,
-                 LIGHTGRAY);
-        DrawText("Hold LSHIFT to move slower", 10, 40, 20, LIGHTGRAY);
-        DrawText(TextFormat("FPS: %d", GetFPS()), 10, GetScreenHeight() - 30,
-                 20, GREEN);
-        DrawRectangle(GetScreenWidth() - 30, GetScreenHeight() - 30, 20, 20,
-                      LIGHTGRAY);
+        TextRenderer::DrawText("WASD to move camera, Right Click to look around", 
+                              10, 10, 20, LIGHTGRAY);
+        TextRenderer::DrawText("Hold LSHIFT to move slower", 10, 40, 20, LIGHTGRAY);
+        TextRenderer::DrawText(TextRenderer::TextFormat("FPS: %d", WindowManager::GetFPS()), 
+                              10, WindowManager::GetScreenHeight() - 30, 20, GREEN);
+        
+        // Draw rectangle (simple colored quad)
+        // For now, skip this or implement a simple 2D rect renderer
     }
 
     void Initialize() override {}
 
-    void PostLuaInitialize() {
+    void PostLuaInitialize() override {
         // Expose helper to Lua (called after L_main is initialized)
         lua_pushcfunction(L_main, L_RunChunk, "__RUN_CHUNK");
         lua_setglobal(L_main, "__RUN_CHUNK");

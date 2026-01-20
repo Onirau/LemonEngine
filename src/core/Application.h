@@ -11,6 +11,8 @@
 #include "../Global.h"
 #include "PrimitiveModels.h"
 #include "SkyboxRenderer.h"
+#include "WindowManager.h"
+#include "TextRenderer.h"
 
 class Application {
 protected:
@@ -39,17 +41,20 @@ public:
         UnloadPrimitiveModels();
         g_instances.clear();
         UnloadSkybox();
-        CloseWindow();
+        TextRenderer::Shutdown();
+        WindowManager::CloseWindow();
         lua_close(L_main);
     }
 
     void Run() {
         Initialize();
 
-        SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-        SetConfigFlags(FLAG_VSYNC_HINT);
-        InitWindow(1280, 720, GetWindowTitle());
-        SetTargetFPS(0);
+        WindowManager::SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+        WindowManager::SetConfigFlags(FLAG_VSYNC_HINT);
+        WindowManager::InitWindow(1280, 720, GetWindowTitle());
+        WindowManager::SetTargetFPS(0);
+
+        TextRenderer::Initialize();
 
         L_main = luaL_newstate();
         luaL_openlibs(L_main);
@@ -98,36 +103,36 @@ protected:
 
 private:
     void MainLoop() {
-        while (!WindowShouldClose()) {
-            const double deltaTime = GetFrameTime();
+        while (!WindowManager::WindowShouldClose()) {
+            const double deltaTime = WindowManager::GetFrameTime();
             float moveSpeed = 25.0f * static_cast<float>(deltaTime);
 
-            if (IsKeyDown(KEY_LEFT_SHIFT)) {
+            if (WindowManager::IsKeyDown(KEY_LEFT_SHIFT)) {
                 moveSpeed *= 0.25;
             }
 
-            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                anchorPos = GetMousePosition();
+            if (WindowManager::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+                anchorPos = WindowManager::GetMousePosition();
                 rotatingCamera = true;
             }
-            if (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
+            if (WindowManager::IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)) {
                 rotatingCamera = false;
             }
 
             if (rotatingCamera) {
                 if (!warpThisFrame) {
-                    Vector2 delta =
-                        Vector2Subtract(GetMousePosition(), anchorPos);
+                    Vector2 currentPos = WindowManager::GetMousePosition();
+                    Vector2 delta = {currentPos.x - anchorPos.x, currentPos.y - anchorPos.y};
                     gYaw += delta.x * 0.004f;
                     gPitch += -delta.y * 0.004f;
 
-                    const float limit = PI / 2 - 0.01f;
+                    const float limit = 3.14159f / 2 - 0.01f;
                     if (gPitch > limit)
                         gPitch = limit;
                     if (gPitch < -limit)
                         gPitch = -limit;
                 } else {
-                    SetMousePosition((int)anchorPos.x, (int)anchorPos.y);
+                    WindowManager::SetMousePosition((int)anchorPos.x, (int)anchorPos.y);
                 }
                 warpThisFrame = !warpThisFrame;
             }
@@ -135,41 +140,77 @@ private:
             Vector3 forward = {cosf(gPitch) * cosf(gYaw), sinf(gPitch),
                                cosf(gPitch) * sinf(gYaw)};
 
-            Vector3 right = Vector3CrossProduct(worldUp, forward);
-            if (Vector3LengthSqr(right) < 1e-6f)
-                right = Vector3{1, 0, 0};
-            right = Vector3Normalize(right);
+            Vector3 right = {
+                worldUp.y * forward.z - worldUp.z * forward.y,
+                worldUp.z * forward.x - worldUp.x * forward.z,
+                worldUp.x * forward.y - worldUp.y * forward.x
+            };
+            float rightLen = sqrtf(right.x * right.x + right.y * right.y + right.z * right.z);
+            if (rightLen < 1e-6f) {
+                right = {1, 0, 0};
+            } else {
+                right.x /= rightLen;
+                right.y /= rightLen;
+                right.z /= rightLen;
+            }
 
-            Vector3 up = Vector3CrossProduct(forward, right);
+            Vector3 up = {
+                forward.y * right.z - forward.z * right.y,
+                forward.z * right.x - forward.x * right.z,
+                forward.x * right.y - forward.y * right.x
+            };
 
             Vector3 delta = {0, 0, 0};
-            if (IsKeyDown(KEY_W))
-                delta = Vector3Add(delta, Vector3Scale(forward, moveSpeed));
-            if (IsKeyDown(KEY_S))
-                delta =
-                    Vector3Subtract(delta, Vector3Scale(forward, moveSpeed));
-            if (IsKeyDown(KEY_D))
-                delta = Vector3Subtract(delta, Vector3Scale(right, moveSpeed));
-            if (IsKeyDown(KEY_A))
-                delta = Vector3Add(delta, Vector3Scale(right, moveSpeed));
-            if (IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_E))
-                delta = Vector3Add(delta, Vector3Scale(up, moveSpeed));
-            if (IsKeyDown(KEY_Q))
-                delta = Vector3Subtract(delta, Vector3Scale(up, moveSpeed));
+            if (WindowManager::IsKeyDown(KEY_W)) {
+                delta.x += forward.x * moveSpeed;
+                delta.y += forward.y * moveSpeed;
+                delta.z += forward.z * moveSpeed;
+            }
+            if (WindowManager::IsKeyDown(KEY_S)) {
+                delta.x -= forward.x * moveSpeed;
+                delta.y -= forward.y * moveSpeed;
+                delta.z -= forward.z * moveSpeed;
+            }
+            if (WindowManager::IsKeyDown(KEY_D)) {
+                delta.x -= right.x * moveSpeed;
+                delta.y -= right.y * moveSpeed;
+                delta.z -= right.z * moveSpeed;
+            }
+            if (WindowManager::IsKeyDown(KEY_A)) {
+                delta.x += right.x * moveSpeed;
+                delta.y += right.y * moveSpeed;
+                delta.z += right.z * moveSpeed;
+            }
+            if (WindowManager::IsKeyDown(KEY_SPACE) || WindowManager::IsKeyDown(KEY_E)) {
+                delta.x += up.x * moveSpeed;
+                delta.y += up.y * moveSpeed;
+                delta.z += up.z * moveSpeed;
+            }
+            if (WindowManager::IsKeyDown(KEY_Q)) {
+                delta.x -= up.x * moveSpeed;
+                delta.y -= up.y * moveSpeed;
+                delta.z -= up.z * moveSpeed;
+            }
 
-            g_camera.position = Vector3Add(g_camera.position, delta);
-            g_camera.target = Vector3Add(g_camera.position, forward);
+            g_camera.position.x += delta.x;
+            g_camera.position.y += delta.y;
+            g_camera.position.z += delta.z;
+            
+            g_camera.target.x = g_camera.position.x + forward.x;
+            g_camera.target.y = g_camera.position.y + forward.y;
+            g_camera.target.z = g_camera.position.z + forward.z;
+            
             g_camera.up = up;
 
             TaskScheduler_Step();
 
-            BeginDrawing();
-            ClearBackground(RAYWHITE);
+            WindowManager::BeginDrawing();
+            WindowManager::ClearBackground(RAYWHITE);
 
             RenderScene(g_camera, g_instances);
             RenderUI();
 
-            EndDrawing();
+            WindowManager::EndDrawing();
         }
     }
 };

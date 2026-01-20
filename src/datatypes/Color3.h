@@ -1,11 +1,18 @@
 #pragma once
+
 #include <algorithm>
 #include <cmath>
-#include <raylib.h>
-
 #include <lua.h>
 #include <luacode.h>
 #include <lualib.h>
+
+// temporary color4
+struct Color {
+    unsigned char r, g, b, a;
+    Color() : r(255), g(255), b(255), a(255) {}
+    Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255)
+        : r(r), g(g), b(b), a(a) {}
+};
 
 /**
  * @brief Represents a color with RGB components in the range [0, 1]
@@ -56,10 +63,6 @@ struct Color3 {
     Color3(float red, float green, float blue)
         : r(std::clamp(red, 0.0f, 1.0f)), g(std::clamp(green, 0.0f, 1.0f)),
           b(std::clamp(blue, 0.0f, 1.0f)) {}
-
-    Color3(Color rayColor)
-        : r((float)rayColor.r / 255.f), g((float)rayColor.g / 255.f),
-          b((float)rayColor.b / 255.f) {}
 
     /**
      * @method fromRGB
