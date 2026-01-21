@@ -4,6 +4,8 @@
 #include "../instances/DataModel.h"
 #include "../instances/Part.h"
 #include "../instances/services/Lighting.h"
+#include "src/graphics/Shader.h"
+#include "src/graphics/Texture2D.h"
 #include "PrimitiveModels.h"
 #include "SkyboxRenderer.h"
 #include <direct.h>
@@ -11,12 +13,12 @@
 #define SHADOW_MAP_SIZE 2048
 
 unsigned int depthFBO, depthTex;
-Shader shadowShader;
+Engine::Graphics::Shader shadowShader;
 int lightSpaceMatrixLoc;
 int shadowMapLoc;
 int lightDirLoc;
 
-Texture2D g_defaultTexture;
+Engine::Graphics::Texture2D g_defaultTexture;
 
 static Color Color3ToColor(const Color3 &c) {
     return Color{(unsigned char)roundf(c.r * 255.0f),
@@ -24,7 +26,7 @@ static Color Color3ToColor(const Color3 &c) {
                  (unsigned char)roundf(c.b * 255.0f), 255};
 }
 
-Texture2D GenerateDefaultTexture(int width, int height) {
+Engine::Graphics::Texture2D GenerateDefaultTexture(int width, int height) {
     Image img = GenImageColor(width, height, BLANK);
 
     for (int y = 0; y < height; y++) {
@@ -35,7 +37,7 @@ Texture2D GenerateDefaultTexture(int width, int height) {
         }
     }
 
-    Texture2D tex = LoadTextureFromImage(img);
+    Engine::Graphics::Texture2D tex = LoadTextureFromImage(img);
     UnloadImage(img);
 
     return tex;
