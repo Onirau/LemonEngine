@@ -59,6 +59,7 @@ file(GLOB_RECURSE COMMON_SOURCES
     "src/datatypes/*.cpp"
     "src/enums/*.cpp"
     "src/instances/*.cpp"
+    "src/graphics/*.cpp"
     "src/Global.cpp"
 )
 
