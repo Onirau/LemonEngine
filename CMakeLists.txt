@@ -62,6 +62,7 @@ file(GLOB_RECURSE COMMON_SOURCES
     "src/Global.cpp"
 )
 
+list(APPEND COMMON_SOURCES ${GLAD_SOURCE})
 list(APPEND COMMON_SOURCES "src/stb_image_impl.cpp")
 
 message(STATUS "Found source files:")

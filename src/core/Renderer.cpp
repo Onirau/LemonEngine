@@ -139,16 +139,6 @@ void GenerateDefaultTexture(int width, int height) {
     UnloadImage(img);
 }
 
-void DrawSun(const Vector3 &lightDir, const Camera3D &camera) {
-    (void)lightDir;
-    (void)camera;
-    // Stub - implement sphere drawing
-}
-
-void DrawSkybox() {
-    // Stub from SkyboxRenderer
-}
-
 glm::mat4 GetLightSpaceMatrix(const Vector3 &lightDir, const Vector3 &sceneCenter) {
     Vector3 lightPos = {sceneCenter.x - lightDir.x * 100.0f,
                         sceneCenter.y - lightDir.y * 100.0f,

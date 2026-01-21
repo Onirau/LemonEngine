@@ -1,7 +1,7 @@
 #include "PrimitiveModels.h"
 #include <unordered_map>
 
-extern Engine::Graphics::Texture2D g_defaultTexture;
+extern Engine::Graphics::Texture2D* g_defaultTexture;
 
 static std::unordered_map<PartType, Engine::Graphics::Model> g_models;
 
@@ -56,13 +56,18 @@ static Mesh GenMeshCube(float width, float height, float depth)
             v.Position = cubeVerts[face[i]];
             v.Normal = normal;
             v.TexCoords = uvs[i%4];
+            v.Tangent = glm::vec3(0.0f);
+            v.Bitangent = glm::vec3(0.0f);
             vertices.push_back(v);
             indices.push_back(static_cast<unsigned int>(vertices.size()-1));
         }
     }
 
     std::vector<Texture> textures;
-    textures.push_back({ &g_defaultTexture, "diffuse" });
+    Texture tex;
+    tex.texture = g_defaultTexture;
+    tex.type = "diffuse";
+    textures.push_back(tex);
 
     return Mesh(vertices, indices, textures);
 }
@@ -73,7 +78,6 @@ static Mesh GenMeshCylinder(float radius, float height, int slices)
     std::vector<unsigned int> indices;
 
     float halfHeight = height * 0.5f;
-    glm::vec2 uv = {0,0};
 
     // Side surface
     for (int i = 0; i < slices; ++i)
@@ -90,13 +94,13 @@ static Mesh GenMeshCylinder(float radius, float height, int slices)
         glm::vec3 normal1 = glm::normalize(glm::vec3(p1.x,0,p1.z));
 
         // Two triangles per quad
-        vertices.push_back({p0, normal0, {0,0}});
-        vertices.push_back({p1, normal1, {1,0}});
-        vertices.push_back({p2, normal1, {1,1}});
+        vertices.push_back({p0, normal0, {0,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p1, normal1, {1,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p2, normal1, {1,1}, glm::vec3(0.0f), glm::vec3(0.0f)});
 
-        vertices.push_back({p2, normal1, {1,1}});
-        vertices.push_back({p3, normal0, {0,1}});
-        vertices.push_back({p0, normal0, {0,0}});
+        vertices.push_back({p2, normal1, {1,1}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p3, normal0, {0,1}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p0, normal0, {0,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
 
         for(int j=0;j<6;j++)
             indices.push_back(static_cast<unsigned int>(vertices.size()-6+j));
@@ -120,24 +124,27 @@ static Mesh GenMeshCylinder(float radius, float height, int slices)
         glm::vec3 bottomNormal(0,-1,0);
 
         // Top cap
-        vertices.push_back({topCenter, topNormal, {0.5f,0.5f}});
-        vertices.push_back({p0, topNormal, {0,0}});
-        vertices.push_back({p1, topNormal, {1,0}});
+        vertices.push_back({topCenter, topNormal, {0.5f,0.5f}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p0, topNormal, {0,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p1, topNormal, {1,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
         indices.push_back(static_cast<unsigned int>(vertices.size()-3));
         indices.push_back(static_cast<unsigned int>(vertices.size()-2));
         indices.push_back(static_cast<unsigned int>(vertices.size()-1));
 
         // Bottom cap
-        vertices.push_back({bottomCenter, bottomNormal, {0.5f,0.5f}});
-        vertices.push_back({p3, bottomNormal, {1,0}});
-        vertices.push_back({p2, bottomNormal, {0,0}});
+        vertices.push_back({bottomCenter, bottomNormal, {0.5f,0.5f}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p3, bottomNormal, {1,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
+        vertices.push_back({p2, bottomNormal, {0,0}, glm::vec3(0.0f), glm::vec3(0.0f)});
         indices.push_back(static_cast<unsigned int>(vertices.size()-3));
         indices.push_back(static_cast<unsigned int>(vertices.size()-2));
         indices.push_back(static_cast<unsigned int>(vertices.size()-1));
     }
 
     std::vector<Texture> textures;
-    textures.push_back({ &g_defaultTexture, "diffuse" });
+    Texture tex;
+    tex.texture = g_defaultTexture;
+    tex.type = "diffuse";
+    textures.push_back(tex);
 
     return Mesh(vertices, indices, textures);
 }
@@ -163,7 +170,7 @@ static Mesh GenMeshSphere(float radius, int slices, int stacks)
             glm::vec3 normal = glm::normalize(pos);
             glm::vec2 uv(theta/(2*Constants::PI_F), phi/Constants::PI_F);
 
-            vertices.push_back({pos, normal, uv});
+            vertices.push_back({pos, normal, uv, glm::vec3(0.0f), glm::vec3(0.0f)});
         }
     }
 
@@ -185,7 +192,10 @@ static Mesh GenMeshSphere(float radius, int slices, int stacks)
     }
 
     std::vector<Texture> textures;
-    textures.push_back({ &g_defaultTexture, "diffuse" });
+    Texture tex;
+    tex.texture = g_defaultTexture;
+    tex.type = "diffuse";
+    textures.push_back(tex);
 
     return Mesh(vertices, indices, textures);
 }
@@ -232,13 +242,18 @@ static Mesh GenMeshWedge()
             v.Position = verts[i+j];
             v.Normal = normal;
             v.TexCoords = uvs[i+j];
+            v.Tangent = glm::vec3(0.0f);
+            v.Bitangent = glm::vec3(0.0f);
             vertices.push_back(v);
             indices.push_back(static_cast<unsigned int>(vertices.size()-1));
         }
     }
 
     std::vector<Texture> textures;
-    textures.push_back({ &g_defaultTexture, "diffuse" });
+    Texture tex;
+    tex.texture = g_defaultTexture;
+    tex.type = "diffuse";
+    textures.push_back(tex);
 
     return Mesh(vertices, indices, textures);
 }
@@ -288,6 +303,8 @@ static Mesh GenMeshCornerWedge()
             v.Position = verts[i+j];
             v.Normal = normal;
             v.TexCoords = uvs[i+j];
+            v.Tangent = glm::vec3(0.0f);
+            v.Bitangent = glm::vec3(0.0f);
             vertices.push_back(v);
             indices.push_back(static_cast<unsigned int>(vertices.size()-1));
         }
@@ -295,16 +312,18 @@ static Mesh GenMeshCornerWedge()
 
     // Assign default diffuse texture
     std::vector<Texture> textures;
-    textures.push_back({ &g_defaultTexture, "diffuse" });
+    Texture tex;
+    tex.texture = g_defaultTexture;
+    tex.type = "diffuse";
+    textures.push_back(tex);
 
     return Mesh(vertices, indices, textures);
 }
 
 Model LoadModelFromMesh(const Mesh& mesh)
 {
-    Model model; // works now
+    Model model;
     model.GetMeshes().push_back(mesh);
-
     return model;
 }
 
