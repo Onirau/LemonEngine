@@ -1,6 +1,13 @@
 #include "Task.h"
+#include "../core/WindowManager.h"
+#include <GLFW/glfw3.h>
 
 std::vector<LuaTask> g_tasks;
+
+// Helper function to get current time
+static double GetTime() {
+    return glfwGetTime();
+}
 
 int Task_RunScript(lua_State *L, std::string &scriptText) {
     size_t bcSize;

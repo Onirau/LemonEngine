@@ -10,6 +10,7 @@
 
 #include "../Global.h"
 #include "PrimitiveModels.h"
+#include "Renderer.h"
 #include "SkyboxRenderer.h"
 #include "TextRenderer.h"
 

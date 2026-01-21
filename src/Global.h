@@ -4,10 +4,12 @@
 
 #include "core/WindowManager.h"
 #include "core/LuaBindings.h"
-// #include "core/Renderer.h"
 #include "instances/DataModel.h"
 #include "instances/services/Lighting.h"
 #include "instances/services/Workspace.h"
+
+// Forward declarations
+struct lua_State;
 
 // Globals
 extern std::vector<BasePart *> g_instances;

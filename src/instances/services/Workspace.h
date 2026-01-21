@@ -2,6 +2,7 @@
 
 #include "../../datatypes/Vector3.h"
 #include "../Instance.h"
+#include "src/core/WindowManager.h"
 
 #include <lua.h>
 #include <luacode.h>
