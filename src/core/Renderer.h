@@ -7,14 +7,14 @@
 // Forward declarations
 struct BasePart;
 
-// External global texture - changed to pointer to match implementation
+// External global texture - pointer to match implementation
 namespace Engine { namespace Graphics { class Texture2D; } }
 extern Engine::Graphics::Texture2D* g_defaultTexture;
 
-// Function declarations - corrected return types
+// Function declarations
 void GenerateDefaultTexture(int width = 128, int height = 128);
 
-// Matrix and lighting functions - use glm::mat4 instead of undefined Matrix
+// Matrix and lighting functions
 glm::mat4 GetLightSpaceMatrix(const Vector3 &lightDir, const Vector3 &sceneCenter);
 
 void RenderShadowMap(const std::vector<BasePart *> &instances,

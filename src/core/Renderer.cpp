@@ -1,22 +1,21 @@
 #include "Renderer.h"
-
 #include "src/graphics/Shader.h"
 #include "src/graphics/Texture2D.h"
 #include "src/graphics/Model.h"
 #include "PrimitiveModels.h"
 #include "SkyboxRenderer.h"
 #include "../instances/BasePart.h"
+#include "../enums/PartType.h"
+#include "src/instances/Part.h"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <cstdlib>
 #include <cmath>
 
-// Define missing raylib-like functions
-#define DEG2RAD (3.14159265358979323846f / 180.0f)
-
-// Stub implementations for raylib-like functions
+// Stub implementations for image generation
 typedef struct Image {
     void* data;
     int width;
@@ -52,68 +51,16 @@ void ImageDrawPixel(Image* image, int x, int y, Color color) {
     pixels[index + 3] = color.a;
 }
 
-Engine::Graphics::Texture2D LoadTextureFromImage(Image img) {
-    return Engine::Graphics::Texture2D(img.width, img.height, (unsigned char*)img.data);
+Engine::Graphics::Texture2D* LoadTextureFromImage(Image img) {
+    return new Engine::Graphics::Texture2D(img.width, img.height, (unsigned char*)img.data);
 }
 
 void UnloadImage(Image img) {
     if (img.data) free(img.data);
 }
 
-// Matrix helper functions
-glm::mat4 MatrixPerspective(float fovy, float aspect, float nearPlane, float farPlane) {
-    return glm::perspective(fovy, aspect, nearPlane, farPlane);
-}
-
-glm::mat4 MatrixOrtho(float left, float right, float bottom, float top, float nearPlane, float farPlane) {
-    return glm::ortho(left, right, bottom, top, nearPlane, farPlane);
-}
-
-glm::mat4 MatrixLookAt(Vector3 eye, Vector3 target, Vector3 up) {
-    glm::vec3 gEye(eye.x, eye.y, eye.z);
-    glm::vec3 gTarget(target.x, target.y, target.z);
-    glm::vec3 gUp(up.x, up.y, up.z);
-    return glm::lookAt(gEye, gTarget, gUp);
-}
-
-glm::mat4 MatrixIdentity() {
-    return glm::mat4(1.0f);
-}
-
-glm::mat4 MatrixMultiply(glm::mat4 left, glm::mat4 right) {
-    return left * right;
-}
-
-Vector3 Vector3Scale(Vector3 v, float scalar) {
-    return Vector3(v.x * scalar, v.y * scalar, v.z * scalar);
-}
-
-Vector3 Vector3Add(Vector3 v1, Vector3 v2) {
-    return Vector3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
-}
-
-Vector3 Vector3Negate(Vector3 v) {
-    return Vector3(-v.x, -v.y, -v.z);
-}
-
-Vector3 Vector3Normalize(Vector3 v) {
-    float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (length > 0.00001f) {
-        return Vector3(v.x / length, v.y / length, v.z / length);
-    }
-    return Vector3(0, 0, 0);
-}
-
-#define SHADOW_MAP_SIZE 2048
-
-unsigned int depthFBO = 0;
-unsigned int depthTex = 0;
-Engine::Graphics::Shader* shadowShader = nullptr;
-int lightSpaceMatrixLoc = -1;
-int shadowMapLoc = -1;
-int lightDirLoc = -1;
-
 Engine::Graphics::Texture2D* g_defaultTexture = nullptr;
+Engine::Graphics::Shader* g_basicShader = nullptr;
 
 static Color Color3ToColor(const Color3 &c) {
     return Color{(unsigned char)roundf(c.r * 255.0f),
@@ -135,38 +82,161 @@ void GenerateDefaultTexture(int width, int height) {
     if (g_defaultTexture) {
         delete g_defaultTexture;
     }
-    g_defaultTexture = new Engine::Graphics::Texture2D(img.width, img.height, (unsigned char*)img.data);
+    g_defaultTexture = LoadTextureFromImage(img);
     UnloadImage(img);
 }
 
-glm::mat4 GetLightSpaceMatrix(const Vector3 &lightDir, const Vector3 &sceneCenter) {
-    Vector3 lightPos = {sceneCenter.x - lightDir.x * 100.0f,
-                        sceneCenter.y - lightDir.y * 100.0f,
-                        sceneCenter.z - lightDir.z * 100.0f};
+// Basic vertex shader
+static const char* basicVertexShader = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord;
 
-    glm::mat4 view = MatrixLookAt(lightPos, sceneCenter, Vector3{0.0f, 1.0f, 0.0f});
-    glm::mat4 projection = MatrixOrtho(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 200.0f);
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoord;
 
-    return MatrixMultiply(view, projection);
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    TexCoord = aTexCoord;
+    
+    gl_Position = projection * view * vec4(FragPos, 1.0);
 }
+)";
 
-void RenderShadowMap(const std::vector<BasePart *> &instances,
-                     const Vector3 &lightDir, const Vector3 &sceneCenter) {
-    (void)instances;
-    (void)lightDir;
-    (void)sceneCenter;
-    // Stub implementation
+// Basic fragment shader
+static const char* basicFragmentShader = R"(
+#version 330 core
+out vec4 FragColor;
+
+in vec3 FragPos;
+in vec3 Normal;
+in vec2 TexCoord;
+
+uniform sampler2D texture_diffuse;
+uniform vec3 objectColor;
+uniform vec3 lightDir;
+uniform vec3 viewPos;
+uniform float transparency;
+
+void main()
+{
+    // Ambient
+    float ambientStrength = 0.3;
+    vec3 ambient = ambientStrength * objectColor;
+    
+    // Diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDirection = normalize(-lightDir);
+    float diff = max(dot(norm, lightDirection), 0.0);
+    vec3 diffuse = diff * objectColor;
+    
+    // Specular
+    float specularStrength = 0.5;
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDirection, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular = specularStrength * spec * vec3(1.0);
+    
+    vec4 texColor = texture(texture_diffuse, TexCoord);
+    vec3 result = (ambient + diffuse + specular) * texColor.rgb;
+    
+    FragColor = vec4(result, 1.0 - transparency);
+}
+)";
+
+PartType StringToPartType(const std::string& shape) {
+    if (shape == "Ball" || shape == "Sphere") return PartType::Ball;
+    if (shape == "Block") return PartType::Block;
+    if (shape == "Cylinder") return PartType::Cylinder;
+    if (shape == "Wedge") return PartType::Wedge;
+    if (shape == "CornerWedge") return PartType::CornerWedge;
+    return PartType::Block;
 }
 
 void RenderScene(Camera3D camera, const std::vector<BasePart *> instances) {
-    (void)camera;
-    (void)instances;
-    // Stub implementation - draw basic scene
+    if (!g_basicShader) return;
+
+    g_basicShader->Bind();
+
+    // Set up view and projection matrices
+    glm::vec3 cameraPos(camera.position.x, camera.position.y, camera.position.z);
+    glm::vec3 cameraTarget(camera.target.x, camera.target.y, camera.target.z);
+    glm::vec3 cameraUp(camera.up.x, camera.up.y, camera.up.z);
+    
+    glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+    glm::mat4 projection = glm::perspective(
+        glm::radians(camera.fovy),
+        (float)WindowManager::GetScreenWidth() / (float)WindowManager::GetScreenHeight(),
+        0.1f, 1000.0f
+    );
+
+    g_basicShader->SetMat4("view", view);
+    g_basicShader->SetMat4("projection", projection);
+    g_basicShader->SetVec3("viewPos", cameraPos);
+    g_basicShader->SetVec3("lightDir", glm::vec3(0.5f, -1.0f, 0.3f));
+
+    // Render each part
+    for (BasePart* part : instances) {
+        if (!part) continue;
+
+        // Get the model for this part type
+        Engine::Graphics::Model* model = nullptr;
+        
+        // Try to get Shape from Part (if it's a Part)
+        if (part->IsA("Part")) {
+            Part* partObj = static_cast<Part*>(part);
+            PartType shapeType = StringToPartType(partObj->Shape);
+            model = GetPrimitiveModel(shapeType);
+        } else {
+            // Default to block for other BasePart types
+            model = GetPrimitiveModel(PartType::Block);
+        }
+
+        if (!model) continue;
+
+        // Set up model matrix
+        glm::mat4 modelMat = glm::mat4(1.0f);
+        modelMat = glm::translate(modelMat, glm::vec3(
+            part->Position.x, part->Position.y, part->Position.z
+        ));
+        
+        // Apply rotation (convert from degrees to radians)
+        modelMat = glm::rotate(modelMat, glm::radians(part->Rotation.x), glm::vec3(1, 0, 0));
+        modelMat = glm::rotate(modelMat, glm::radians(part->Rotation.y), glm::vec3(0, 1, 0));
+        modelMat = glm::rotate(modelMat, glm::radians(part->Rotation.z), glm::vec3(0, 0, 1));
+        
+        // Apply scale
+        modelMat = glm::scale(modelMat, glm::vec3(
+            part->Size.x, part->Size.y, part->Size.z
+        ));
+
+        g_basicShader->SetMat4("model", modelMat);
+        g_basicShader->SetVec3("objectColor", glm::vec3(
+            part->Color.r, part->Color.g, part->Color.b
+        ));
+        g_basicShader->SetFloat("transparency", part->Transparency);
+
+        // Draw the model
+        model->Draw();
+    }
+
+    g_basicShader->Unbind();
 }
 
 void PrepareRenderer() {
     GenerateDefaultTexture();
     PreparePrimitiveModels();
+    
+    // Create basic shader
+    g_basicShader = new Engine::Graphics::Shader(basicVertexShader, basicFragmentShader);
 }
 
 void UnprepareRenderer() {
@@ -174,8 +244,18 @@ void UnprepareRenderer() {
         delete g_defaultTexture;
         g_defaultTexture = nullptr;
     }
-    if (shadowShader) {
-        delete shadowShader;
-        shadowShader = nullptr;
+    if (g_basicShader) {
+        delete g_basicShader;
+        g_basicShader = nullptr;
     }
+}
+
+glm::mat4 GetLightSpaceMatrix(const Vector3 &lightDir, const Vector3 &sceneCenter) {
+    // Stub for now
+    return glm::mat4(1.0f);
+}
+
+void RenderShadowMap(const std::vector<BasePart *> &instances,
+                     const Vector3 &lightDir, const Vector3 &sceneCenter) {
+    // Stub for now
 }

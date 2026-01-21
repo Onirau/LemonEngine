@@ -26,7 +26,8 @@ public:
          const std::vector<unsigned int>& indices,
          const std::vector<Texture>& textures);
 
-    ~Mesh() = default;
+    // Destructor - declared but NOT defaulted
+    ~Mesh();
 
     // Render the mesh using OpenGL
     void Draw() const;

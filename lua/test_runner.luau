@@ -9,7 +9,7 @@ local currentName = nil
 local currentTestFailed = false
 
 local function outputTest(ok, msg)
-	print((ok and "[🟢 PASS] " or "[🟠 FAIL] ") .. msg)
+	print((ok and "[PASS] " or "[► FAIL] ") .. msg)
 end
 
 local function expect(actual)

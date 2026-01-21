@@ -1,4 +1,5 @@
 #include "SkyboxRenderer.h"
+#include <glad/glad.h>
 
 Skybox g_skybox;
 
@@ -52,20 +53,6 @@ void UnloadSkybox() {
 }
 
 void DrawSkybox() {
-    // float inner[3] = {0.25f, 0.55f, 0.65f};
-    // float outer[3] = {0.05f, 0.15f, 0.45f};
-
-    // rlDisableDepthTest();
-    // rlDisableDepthMask();
-    // rlDisableBackfaceCulling();
-    // BeginShaderMode(g_skybox.shader);
-
-    // SetShaderValue(g_skybox.shader, u_inner, inner, SHADER_UNIFORM_VEC3);
-    // SetShaderValue(g_skybox.shader, u_outer, outer, SHADER_UNIFORM_VEC3);
-    // DrawModel(g_skybox.model, {0, 0, 0}, 1000000.0f, WHITE);
-
-    // EndShaderMode();
-    // rlEnableBackfaceCulling();
-    // rlEnableDepthMask();
-    // rlEnableDepthTest();
+    // Stub - draw simple gradient background
+    glClearColor(0.53f, 0.81f, 0.92f, 1.0f); // Sky blue
 }

@@ -4,14 +4,12 @@ namespace Engine::Graphics {
 
 Model::Model(const std::string& path)
 {
-    // Stub: no real model loading
     m_Directory = "";
-    // Normally: LoadModel(path);
+    // Model loading from file not implemented yet
 }
 
 void Model::Draw() const
 {
-    // Stub: just iterate over meshes
     for (const auto& mesh : m_Meshes)
     {
         mesh.Draw();
@@ -20,12 +18,12 @@ void Model::Draw() const
 
 void Model::LoadModel(const std::string& path)
 {
-    // Stub, does nothing
+    // Stub - not implemented yet
 }
 
 void Model::ProcessNode()
 {
-    // Stub
+    // Stub - not implemented yet
 }
 
 Mesh Model::ProcessMesh()
