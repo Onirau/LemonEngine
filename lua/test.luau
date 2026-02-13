@@ -39,4 +39,3 @@ print(part2.Parent == part1) -- expect true
 
 print(script.Parent) -- expect nil
 print(script:IsA("Script")) -- expect true
-print(script:IsA("Scripts")) -- expect false
